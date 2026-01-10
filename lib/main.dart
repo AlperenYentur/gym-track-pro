@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'firebase_options_salona.dart';
 // BU IMPORT ZATEN VARDI, KULLANIYORUZ:
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -19,7 +19,7 @@ void main() async {
 
   // 1. Firebase Başlatılıyor
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: SalonAFirebaseOptions.currentPlatform
   );
 
   // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
