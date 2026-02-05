@@ -1,0 +1,38 @@
+name: gym_track_pro
+description: A new Flutter project.
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- İKONLAR ---
+  cupertino_icons: ^1.0.6
+  line_icons: ^2.0.3
+  fl_chart: ^0.66.0  # Grafik çizimi için gerekli
+  url_launcher: ^6.3.0
+
+  # --- FIREBASE (Veritabanı ve Giriş) ---
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+
+  # --- STATE MANAGEMENT (Veri Yönetimi) ---
+  provider: ^6.1.2
+
+  # --- TAKVİM VE TARİH (Yeni Eklenenler) ---
+  table_calendar: ^3.0.9
+  intl: ^0.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
