@@ -45,44 +45,39 @@ class _ClassManagerScreenState extends State<ClassManagerScreen> {
               const SizedBox(height: 20),
 
               // KATEGORİ LİSTESİ
-              ...categories
-                  .map((category) => Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        elevation: 2,
-                        child: ExpansionTile(
-                          // Başlık ve İkonlar
-                          title: Text(category.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // KATEGORİ DÜZENLEME
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () =>
-                                    _showCategoryDialog(context, db, category),
-                              ),
-                              // KATEGORİ SİLME
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _confirmDelete(context,
-                                    () => db.deleteCategory(category.id)),
-                              ),
-                            ],
+              ...categories.map((category) => Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    elevation: 2,
+                    child: ExpansionTile(
+                      // Başlık ve İkonlar
+                      title: Text(category.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // KATEGORİ DÜZENLEME
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () =>
+                                _showCategoryDialog(context, db, category),
                           ),
-                          children: [
-                            // KATEGORİNİN İÇİNDEKİ GRUPLAR
-                            _GroupsList(
-                                categoryId: category.id,
-                                categoryName: category.name,
-                                db: db),
-                          ],
-                        ),
-                      ))
-                  .toList()
+                          // KATEGORİ SİLME
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(
+                                context, () => db.deleteCategory(category.id)),
+                          ),
+                        ],
+                      ),
+                      children: [
+                        // KATEGORİNİN İÇİNDEKİ GRUPLAR
+                        _GroupsList(
+                            categoryId: category.id,
+                            categoryName: category.name,
+                            db: db),
+                      ],
+                    ),
+                  ))
             ],
           );
         },

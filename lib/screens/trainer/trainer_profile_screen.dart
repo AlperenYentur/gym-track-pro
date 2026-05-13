@@ -70,8 +70,9 @@ class _TrainerProfileScreenState extends State<TrainerProfileScreen> {
 
       // 2. Şifre Güncelle (Eğer doluysa)
       if (newPass.isNotEmpty) {
-        if (newPass.length < 6)
+        if (newPass.length < 6) {
           throw Exception("Şifre en az 6 karakter olmalı!");
+        }
         await _authService.updatePassword(newPass);
         _passController.clear();
       }

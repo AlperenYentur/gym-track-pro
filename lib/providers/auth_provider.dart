@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
+import '../models/user_role.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? _user;
-  String? _role;
+  UserRole? _role;
   String? _gymId;
   bool _isLoading = true; // Uygulama açılırken yükleniyor durumunda başlasın
 
   // Getterlar (Dışarıdan erişim için)
   User? get currentUser => _user;
-  String? get role => _role;
+  UserRole? get role => _role;
   String? get gymId => _gymId;
   bool get isLoading => _isLoading;
   bool get isAuth => _user != null;
@@ -48,7 +49,7 @@ class AuthProvider with ChangeNotifier {
       DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        _role = data['role'];
+        _role = UserRole.fromString(data['role']);
         _gymId = data['gymId'];
       }
     } catch (e) {

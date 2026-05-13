@@ -109,10 +109,12 @@ class _MemberListScreenState extends State<MemberListScreen> {
             child: StreamBuilder<List<MemberModel>>(
               stream: dbService.getMembers(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                if (!snapshot.hasData || snapshot.data!.isEmpty)
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return _buildEmptyState();
+                }
 
                 var members = snapshot.data!
                     .where((m) => m.name
@@ -194,6 +196,12 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   Text(member.name,
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (member.debt > 0)
+                    Text("Borç: ${member.debt} ₺",
+                        style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13)),
                   Text(
                     member.isPaid
                         ? (daysLeft < 0
@@ -253,11 +261,13 @@ class _MemberListScreenState extends State<MemberListScreen> {
     );
   }
 
-  // --- ÜYE DÜZENLEME PENCERESİ ---
+  // --- ÜYE DÜZENLEME PENCERESİ (GÜNCELLENMİŞ VERSİYON) ---
   void _showEditMemberDialog(
       BuildContext context, MemberModel member, DatabaseService db) {
     final nameCtrl = TextEditingController(text: member.name);
     final phoneCtrl = TextEditingController(text: member.phone);
+    final debtCtrl = TextEditingController(
+        text: member.debt > 0 ? member.debt.toString() : ""); // Varsayılan boş
     DateTime startDate = member.lastPaymentDate;
     DateTime endDate = member.nextPaymentDate;
 
@@ -299,6 +309,23 @@ class _MemberListScreenState extends State<MemberListScreen> {
                     if (d != null) setModalState(() => endDate = d);
                   })),
                 ]),
+                const SizedBox(height: 10),
+                // BORÇ ALANI
+                TextField(
+                  controller: debtCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
+                  decoration: InputDecoration(
+                      labelText: "Kalan Borç (Boş Bırakılamaz)",
+                      prefixIcon: const Icon(Icons.currency_lira),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.red.shade50),
+                ),
                 const SizedBox(height: 20),
                 TextButton.icon(
                     onPressed: () {
@@ -339,8 +366,28 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   backgroundColor: Colors.black, foregroundColor: Colors.white),
               onPressed: () {
                 if (nameCtrl.text.isNotEmpty && phoneCtrl.text.isNotEmpty) {
+                  // Validasyon: Borç boş olamaz
+                  if (debtCtrl.text.isEmpty) {
+                    showDialog(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                              title: const Text("Uyarı"),
+                              content: const Text(
+                                  "Lütfen 'Kalan Borç' kısmını doldurunuz.\n(Borç yoksa 0 yazınız)"),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(c),
+                                    child: const Text("Tamam"))
+                              ],
+                            ));
+                    return;
+                  }
+
+                  double debt =
+                      double.tryParse(debtCtrl.text.replaceAll(',', '.')) ?? 0;
+
                   db.updateMemberDetails(member.id, nameCtrl.text,
-                      phoneCtrl.text, startDate, endDate);
+                      phoneCtrl.text, startDate, endDate, debt);
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Bilgiler güncellendi!")));
@@ -354,43 +401,75 @@ class _MemberListScreenState extends State<MemberListScreen> {
     );
   }
 
+  // --- ÖDEME ALMA PENCERESİ (GÜNCELLENMİŞ) ---
   void _showPaymentDialog(
       BuildContext context, MemberModel member, DatabaseService db) {
     DateTime startDate = DateTime.now();
     DateTime endDate = DateTime.now().add(const Duration(days: 30));
+    final amountCtrl = TextEditingController();
+    final debtCtrl = TextEditingController();
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(builder: (context, setModalState) {
         return AlertDialog(
           title: Text("${member.name} Ödemesi"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Ödeme ve yeni bitiş tarihini seçiniz:"),
-              const SizedBox(height: 15),
-              Row(children: [
-                Expanded(
-                    child: _dateBox("Ödeme Tarihi", startDate, () async {
-                  final d = await showDatePicker(
-                      context: context,
-                      initialDate: startDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030));
-                  if (d != null) setModalState(() => startDate = d);
-                })),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: _dateBox("Bitiş Tarihi", endDate, () async {
-                  final d = await showDatePicker(
-                      context: context,
-                      initialDate: endDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030));
-                  if (d != null) setModalState(() => endDate = d);
-                })),
-              ]),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Ödeme ve yeni bitiş tarihini seçiniz:"),
+                const SizedBox(height: 15),
+                Row(children: [
+                  Expanded(
+                      child: _dateBox("Ödeme Tarihi", startDate, () async {
+                    final d = await showDatePicker(
+                        context: context,
+                        initialDate: startDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030));
+                    if (d != null) setModalState(() => startDate = d);
+                  })),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: _dateBox("Bitiş Tarihi", endDate, () async {
+                    final d = await showDatePicker(
+                        context: context,
+                        initialDate: endDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030));
+                    if (d != null) setModalState(() => endDate = d);
+                  })),
+                ]),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
+                  decoration: const InputDecoration(
+                      labelText: "Alınan Tutar (₺)",
+                      border: OutlineInputBorder(),
+                      hintText: "Örn: 1500"),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: debtCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
+                  decoration: const InputDecoration(
+                      labelText: "Kalan Borç (Boş Bırakılamaz)",
+                      border: OutlineInputBorder(),
+                      hintText: "Borç yoksa 0 yazınız"),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -400,10 +479,33 @@ class _MemberListScreenState extends State<MemberListScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black, foregroundColor: Colors.white),
               onPressed: () {
-                db.confirmPayment(member.id, startDate, endDate);
+                if (amountCtrl.text.isEmpty || debtCtrl.text.isEmpty) {
+                  showDialog(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                            title: const Text("Uyarı"),
+                            content: const Text(
+                                "Lütfen tüm alanları doldurunuz.\n(Sayısal değer giriniz)"),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(c),
+                                  child: const Text("Tamam"))
+                            ],
+                          ));
+                  return;
+                }
+
+                double amount =
+                    double.tryParse(amountCtrl.text.replaceAll(',', '.')) ?? 0;
+                double debt =
+                    double.tryParse(debtCtrl.text.replaceAll(',', '.')) ?? 0;
+
+                db.confirmPayment(member.id, startDate, endDate, amount, debt);
                 Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Ödeme kaydedildi!")));
               },
-              child: const Text("ONAYLA"),
+              child: const Text("KAYDET"),
             )
           ],
         );
@@ -443,7 +545,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   title: const Text("Ödeme Alındı",
                       style: TextStyle(fontSize: 14)),
                   value: isPaid,
-                  activeColor: Colors.green,
+                  activeTrackColor: Colors.green,
                   onChanged: (val) => setModalState(() => isPaid = val),
                 ),
                 Opacity(
@@ -503,10 +605,11 @@ class _MemberListScreenState extends State<MemberListScreen> {
                           if (context.mounted) Navigator.pop(ctx);
                         } catch (e) {
                           setModalState(() => isLoading = false);
-                          if (context.mounted)
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text("Hata: $e"),
                                 backgroundColor: Colors.red));
+                          }
                         }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(

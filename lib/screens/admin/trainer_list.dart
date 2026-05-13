@@ -19,7 +19,7 @@ class _TrainerListScreenState extends State<TrainerListScreen> {
 
   // EĞİTMEN EKLEME VE DÜZENLEME PENCERESİ
   // trainer parametresi boş gelirse "EKLEME", dolu gelirse "DÜZENLEME" modu çalışır.
-  void _showTrainerDialog(BuildContext context, String gymId,
+  void _showTrainerDialog(BuildContext parentContext, String gymId,
       {TrainerModel? trainer}) {
     final isEditing = trainer != null;
 
@@ -35,7 +35,7 @@ class _TrainerListScreenState extends State<TrainerListScreen> {
         TextEditingController(text: isEditing ? trainer.specialty : "");
 
     showDialog(
-      context: context,
+      context: parentContext,
       builder: (ctx) => AlertDialog(
         title: Text(isEditing ? "Eğitmeni Düzenle" : "Yeni Eğitmen Ekle",
             style: const TextStyle(fontWeight: FontWeight.bold)),

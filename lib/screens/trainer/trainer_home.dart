@@ -535,7 +535,7 @@ class _ToolTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: color),
       ),

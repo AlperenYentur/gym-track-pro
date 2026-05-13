@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../models/transaction_model.dart';
 import '../models/member_model.dart';
 import '../models/session_model.dart';
 import '../models/trainer_model.dart';
@@ -84,13 +86,63 @@ class DatabaseService {
     await _db.collection('members').doc(myId).update({'phone': newPhone});
   }
 
+  // --- KASA & FİNANS ---
+  Future<void> addTransaction(TransactionModel transaction) async {
+    if (gymId == null) return;
+    await _db.collection('transactions').add(transaction.toMap());
+  }
+
+  Stream<double> getTotalIncome({DateTime? fromDate}) {
+    if (gymId == null) return Stream.value(0.0);
+    return _db
+        .collection('transactions')
+        .where('gymId', isEqualTo: gymId)
+        .where('type', isEqualTo: 'income')
+        .snapshots()
+        .map((s) {
+      double total = 0;
+      for (var doc in s.docs) {
+        final data = doc.data();
+        // Tarih filtresi (Client-side to avoid index issues)
+        if (fromDate != null && data['date'] != null) {
+          final date = (data['date'] as Timestamp).toDate();
+          if (date.isBefore(fromDate)) continue;
+        }
+        total += (doc['amount'] ?? 0);
+      }
+      return total.toDouble();
+    });
+  }
+
+  // --- KASA SIFIRLAMA İŞLEMLERİ ---
+  Future<DateTime?> getLastResetDate() async {
+    if (gymId == null) return null;
+    final doc = await _db.collection('gym_settings').doc(gymId).get();
+    if (doc.exists && doc.data()!.containsKey('lastKasaResetDate')) {
+      return (doc['lastKasaResetDate'] as Timestamp).toDate();
+    }
+    return null;
+  }
+
+  Future<void> resetCashRegister() async {
+    if (gymId == null) return;
+    await _db.collection('gym_settings').doc(gymId).set({
+      'lastKasaResetDate': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  // --- MÜŞTERİ ÖDEME ---
   Future<void> updateMemberDetails(String memberId, String name, String phone,
-      DateTime start, DateTime end) async {
+      DateTime start, DateTime end, double debt) async {
+    bool isPaid = debt <= 0;
+
     await _db.collection('members').doc(memberId).update({
       'name': name,
       'phone': phone,
       'lastPaymentDate': Timestamp.fromDate(start),
       'nextPaymentDate': Timestamp.fromDate(end),
+      'debt': debt,
+      'isPaid': isPaid
     });
   }
 
@@ -101,13 +153,30 @@ class DatabaseService {
         .update({'workoutProgram': programJson});
   }
 
-  Future<void> confirmPayment(
-      String id, DateTime paymentDate, DateTime endDate) async {
+  Future<void> confirmPayment(String id, DateTime paymentDate, DateTime endDate,
+      double paidAmount, double remainingDebt) async {
+    // 1. Üye Durumunu Güncelle (Borç > 0 ise ödenmedi olarak kalsın)
+    bool isPaid = remainingDebt <= 0;
+
     await _db.collection('members').doc(id).update({
-      'isPaid': true,
+      'isPaid': isPaid,
       'lastPaymentDate': Timestamp.fromDate(paymentDate),
       'nextPaymentDate': Timestamp.fromDate(endDate),
+      'debt': remainingDebt
     });
+
+    // 2. Kasa Kaydı Oluştur (Gelir)
+    if (paidAmount > 0) {
+      await addTransaction(TransactionModel(
+        id: '', // Firestore oluşturacak
+        gymId: gymId!,
+        type: 'income',
+        amount: paidAmount,
+        description: 'Üyelik Yenileme',
+        date: DateTime.now(),
+        relatedMemberId: id,
+      ));
+    }
   }
 
   Future<void> cancelPayment(String id) async {
@@ -288,6 +357,36 @@ class DatabaseService {
 
   Future<void> deleteAnnouncement(String id) async {
     await _db.collection('announcements').doc(id).delete();
+  }
+
+  // --- DUYURU OTOMATİK TEMİZLEME (24 SAAT) ---
+  Future<void> cleanupExpiredAnnouncements() async {
+    if (gymId == null) return;
+
+    // 24 saat öncesini hesapla
+    final threshold = DateTime.now().subtract(const Duration(hours: 24));
+
+    final snapshot = await _db
+        .collection('announcements')
+        .where('gymId', isEqualTo: gymId)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      try {
+        final Timestamp? createdAt = doc.data().containsKey('createdAt')
+            ? doc['createdAt'] as Timestamp?
+            : null;
+
+        if (createdAt != null) {
+          final createdDate = createdAt.toDate();
+          if (createdDate.isBefore(threshold)) {
+            await doc.reference.delete();
+          }
+        }
+      } catch (e) {
+        debugPrint("Duyuru silinirken hata: $e");
+      }
+    }
   }
 
   // --- MEASUREMENTS ---

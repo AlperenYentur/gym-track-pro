@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MessageService {
@@ -20,7 +21,7 @@ class MessageService {
       // Dış uygulamayı açmayı dene
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (e) {
-      print("WhatsApp başlatılamadı: $e");
+      debugPrint("WhatsApp başlatılamadı: $e");
     }
   }
 }

@@ -56,7 +56,7 @@ class AttendanceRecord {
     return AttendanceRecord(
       id: doc.id,
       groupId: data['groupId'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
+      date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: Map<String, bool>.from(data['status'] ?? {}),
     );
   }

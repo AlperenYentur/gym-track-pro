@@ -8,6 +8,7 @@ class MemberModel {
   final DateTime lastPaymentDate; // Firebase ismine göre güncellendi
   final DateTime nextPaymentDate;
   final bool isPaid;
+  final double debt;
   final String? workoutProgram;
 
   MemberModel({
@@ -18,6 +19,7 @@ class MemberModel {
     required this.lastPaymentDate,
     required this.nextPaymentDate,
     required this.isPaid,
+    this.debt = 0.0,
     this.workoutProgram,
   });
 
@@ -28,10 +30,13 @@ class MemberModel {
       gymId: data['gymId'] ?? '',
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
-      // Timestamp dönüşümü yapılıyor
-      lastPaymentDate: (data['lastPaymentDate'] as Timestamp).toDate(),
-      nextPaymentDate: (data['nextPaymentDate'] as Timestamp).toDate(),
+      // Timestamp dönüşümü yapılıyor (Null safety eklendi)
+      lastPaymentDate:
+          (data['lastPaymentDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      nextPaymentDate:
+          (data['nextPaymentDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isPaid: data['isPaid'] ?? false,
+      debt: (data['debt'] ?? 0).toDouble(),
       workoutProgram: data['workoutProgram'],
     );
   }
@@ -44,6 +49,7 @@ class MemberModel {
       'lastPaymentDate': lastPaymentDate,
       'nextPaymentDate': nextPaymentDate,
       'isPaid': isPaid,
+      'debt': debt,
       'workoutProgram': workoutProgram,
     };
   }

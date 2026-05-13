@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 // Provider ve Servisler
 import 'providers/auth_provider.dart';
+import 'models/user_role.dart';
 
 // Ekranlar
 import 'screens/login_screen.dart';
@@ -22,7 +23,7 @@ void main() async {
     options: SalonAFirebaseOptions.currentPlatform
   );
 
-  // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
+// 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
   await initializeDateFormatting('tr_TR', null);
 
   runApp(const MyApp());
@@ -70,12 +71,16 @@ class AuthWrapper extends StatelessWidget {
       return const LoginScreen();
     }
 
+
+
+// ... (existing imports)
+
     // 3. Durum: Rolüne göre yönlendir
-    if (auth.role == 'admin') {
+    if (auth.role == UserRole.admin) {
       return const AdminHomeScreen();
-    } else if (auth.role == 'trainer') {
+    } else if (auth.role == UserRole.trainer) {
       return const TrainerHomeScreen();
-    } else if (auth.role == 'member') {
+    } else if (auth.role == UserRole.member) {
       return const UserHomeScreen();
     }
 

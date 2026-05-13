@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart'; // EKLENDİ
 import '../firebase_options.dart'; // EKLENDİ (Firebase ayarlarını çekmek için)
+import '../models/user_role.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -39,13 +40,13 @@ class AuthService {
       await _db.collection('admins').doc(user.uid).set({
         'email': email,
         'gymName': gymName,
-        'role': 'admin',
+        'role': UserRole.admin.toStr,
         'createdAt': FieldValue.serverTimestamp(),
       });
       // Admin users tablosuna da eklenebilir
       await _db.collection('users').doc(user.uid).set({
         'email': email,
-        'role': 'admin',
+        'role': UserRole.admin.toStr,
         'gymId': user.uid, // Admin kendi ID'si GymID olur
       });
     }
@@ -86,14 +87,14 @@ class AuthService {
           'name': name,
           'phone': phone,
           'specialty': specialty,
-          'role': 'trainer',
+          'role': UserRole.trainer.toStr,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         // Users Koleksiyonuna (Giriş yetkisi için)
         await _db.collection('users').doc(user.uid).set({
           'email': email,
-          'role': 'trainer',
+          'role': UserRole.trainer.toStr,
           'gymId': gymId,
         });
       }
@@ -115,6 +116,8 @@ class AuthService {
     required DateTime startDate,
     required DateTime endDate,
     required bool isPaid,
+    double debt = 0.0,
+    double paidAmount = 0.0,
   }) async {
     FirebaseApp? tempApp;
     try {
@@ -141,18 +144,31 @@ class AuthService {
           'email': email,
           'name': name,
           'phone': phone,
-          'role': 'member',
+          'role': UserRole.member.toStr,
           'isPaid': isPaid,
+          'debt': debt,
           'lastPaymentDate': Timestamp.fromDate(startDate),
           'nextPaymentDate': Timestamp.fromDate(endDate),
           'createdAt': FieldValue.serverTimestamp(),
           'workoutProgram': null, // Başlangıçta boş
         });
 
+        // 3.1 Kasa Kaydı (Eğer ödeme alındıysa)
+        if (paidAmount > 0) {
+          await _db.collection('transactions').add({
+            'gymId': gymId,
+            'type': 'income',
+            'amount': paidAmount,
+            'description': 'Yeni Üyelik Kaydı ($name)',
+            'date': FieldValue.serverTimestamp(),
+            'relatedMemberId': user.uid,
+          });
+        }
+
         // Users Koleksiyonuna
         await _db.collection('users').doc(user.uid).set({
           'email': email,
-          'role': 'member',
+          'role': UserRole.member.toStr,
           'gymId': gymId,
         });
       }

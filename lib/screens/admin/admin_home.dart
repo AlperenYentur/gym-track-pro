@@ -60,8 +60,129 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 }
 
 // --- 1. DASHBOARD (ANASAYFA EKRANI) ---
-class _DashboardTab extends StatelessWidget {
+class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
+
+  @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
+  DateTime? _lastResetDate;
+  bool _isLoadingDate = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Sayfa açıldığında eski duyuruları temizle ve kasa tarihini kontrol et
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final db = DatabaseService(gymId: auth.gymId);
+      db.cleanupExpiredAnnouncements();
+      _checkKasaReset(db);
+    });
+  }
+
+  Future<void> _checkKasaReset(DatabaseService db) async {
+    final lastReset = await db.getLastResetDate();
+    final now = DateTime.now();
+
+    if (lastReset != null) {
+      // Eğer ay değişmişse otomatik sıfırla
+      if (lastReset.month != now.month || lastReset.year != now.year) {
+        await db.resetCashRegister();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Yeni ay başladı! Kasa otomatik sıfırlandı. 🗓️")));
+          setState(() {
+            _lastResetDate = DateTime.now();
+            _isLoadingDate = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _lastResetDate = lastReset;
+            _isLoadingDate = false;
+          });
+        }
+      }
+    } else {
+      // Hiç sıfırlanmamışsa varsayılan olarak null (Tüm zamanlar)
+      if (mounted) setState(() => _isLoadingDate = false);
+    }
+  }
+
+  Future<void> _manualReset(DatabaseService db) async {
+    final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: const Text("Kasa Sıfırlama"),
+              content: const Text(
+                  "Kasayı sıfırlamak istediğinize emin misiniz?\n\nBu işlem kasayı silmez, sadece 'Bu Ay' görünümünü sıfırlar."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text("İptal")),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text("Evet, Sıfırla",
+                        style: TextStyle(color: Colors.red))),
+              ],
+            ));
+
+    if (confirm == true) {
+      await db.resetCashRegister();
+      if (mounted) {
+        setState(() => _lastResetDate = DateTime.now());
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Kasa başarıyla sıfırlandı! ✅")));
+      }
+    }
+  }
+
+  Future<void> _showHistoryDialog(DatabaseService db) async {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Kasa Geçmişi"),
+        content: StreamBuilder<double>(
+          stream: db.getTotalIncome(fromDate: null), // Tüm zamanlar
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+            double total = snapshot.data ?? 0;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Tüm Zamanlar Toplam Gelir",
+                    style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 10),
+                Text(
+                  NumberFormat.currency(locale: 'tr_TR', symbol: '₺')
+                      .format(total),
+                  style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                    "Not: Sıfırlamalar bu tutarı etkilemez.\nBurası işletmenin başından beri kazandığı toplam tutardır.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text("Kapat"))
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +214,102 @@ class _DashboardTab extends StatelessWidget {
             const Text("Genel Durum",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
+
+            // KASA KARTI (RESTORED & IMPROVED)
+            if (_isLoadingDate)
+              const Center(child: CircularProgressIndicator())
+            else
+              StreamBuilder<double>(
+                stream: db.getTotalIncome(fromDate: _lastResetDate),
+                builder: (context, snapshot) {
+                  double total = snapshot.data ?? 0;
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 15),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [
+                        Colors.green.shade700,
+                        Colors.green.shade400
+                      ]),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5))
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle),
+                              child: const Icon(LineIcons.wallet,
+                                  color: Colors.white, size: 30),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("KASA (Bu Ay)",
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 13)),
+                                  Text(
+                                      NumberFormat.currency(
+                                              locale: 'tr_TR', symbol: '₺')
+                                          .format(total),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                            // GEÇMİŞ (HISTORY) BUTONU
+                            IconButton(
+                              onPressed: () => _showHistoryDialog(db),
+                              icon: const Icon(Icons.history,
+                                  color: Colors.white),
+                              tooltip: "Tüm Geçmiş",
+                            ),
+                            // SIFIRLA BUTONU
+                            IconButton(
+                              onPressed: () => _manualReset(db),
+                              icon: const Icon(Icons.refresh,
+                                  color: Colors.white),
+                              tooltip: "Kasayı Sıfırla",
+                            )
+                          ],
+                        ),
+                        if (_lastResetDate != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline,
+                                    color: Colors.white70, size: 12),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "Son Sıfırlama: ${DateFormat('dd MMM HH:mm').format(_lastResetDate!)}",
+                                  style: TextStyle(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 11),
+                                )
+                              ],
+                            ),
+                          )
+                      ],
+                    ),
+                  );
+                },
+              ),
 
             Row(
               children: [
@@ -485,7 +702,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-                color: color.withOpacity(0.1), shape: BoxShape.circle),
+                color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 15),
@@ -534,7 +751,7 @@ class _HubCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: color, size: 30),
             ),

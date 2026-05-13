@@ -465,7 +465,12 @@ class _TrainerScheduleScreenState extends State<TrainerScheduleScreen> {
                                 style: const TextStyle(
                                     color: Colors.green, fontSize: 12)),
                         value: selectedMemberIds.contains(member.id),
-                        activeColor: Colors.black,
+                        fillColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.black;
+                          }
+                          return null;
+                        }),
                         onChanged: (val) {
                           setModalState(() {
                             if (val == true) {
@@ -490,11 +495,17 @@ class _TrainerScheduleScreenState extends State<TrainerScheduleScreen> {
                     style:
                         ElevatedButton.styleFrom(backgroundColor: Colors.black),
                     onPressed: () async {
-                      if (titleCtrl.text.isEmpty || selectedMemberIds.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text("Lütfen başlık ve öğrenci seçin.")));
+                      // 1. BAŞLIK KONTROLÜ
+                      if (titleCtrl.text.isEmpty) {
+                        _showErrorDialog(
+                            context, "Uyarı", "Lütfen ders başlığı giriniz.");
+                        return;
+                      }
+
+                      // 2. ÖĞRENCİ KONTROLÜ
+                      if (selectedMemberIds.isEmpty) {
+                        _showErrorDialog(context, "Uyarı",
+                            "Lütfen en az bir öğrenci seçiniz.");
                         return;
                       }
 
@@ -621,15 +632,21 @@ class _TrainerScheduleScreenState extends State<TrainerScheduleScreen> {
 
   Widget _typeRadio(String label, String val, String currentVal,
       Function(String?) onChanged) {
-    return Row(
-      children: [
-        Radio<String>(
-            value: val,
-            groupValue: currentVal,
-            activeColor: Colors.black,
-            onChanged: onChanged),
-        Text(label),
-      ],
+    return InkWell(
+      onTap: () => onChanged(val),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            val == currentVal
+                ? Icons.radio_button_checked
+                : Icons.radio_button_off,
+            color: val == currentVal ? Colors.black : Colors.grey,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 }

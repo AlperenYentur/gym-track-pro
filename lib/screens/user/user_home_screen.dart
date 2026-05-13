@@ -210,7 +210,7 @@ class _UserDashboardTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.blue.withOpacity(0.2),
+              color: Colors.blue.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 4))
         ],
@@ -223,7 +223,7 @@ class _UserDashboardTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -253,7 +253,7 @@ class _UserDashboardTab extends StatelessWidget {
           Expanded(
             child: Text(data['text'] ?? '',
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.9), fontSize: 13),
+                    color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -429,7 +429,13 @@ class _UserDashboardTab extends StatelessWidget {
     String desc;
     IconData icon;
 
-    if (!isPaid) {
+    if (member.debt > 0) {
+      bgColor = Colors.red.shade50;
+      textColor = Colors.red.shade800;
+      title = "Ödenmemiş Borç";
+      desc = "Toplam Borç: ${member.debt} ₺\nLütfen resepsiyona ödeme yapınız.";
+      icon = Icons.money_off;
+    } else if (!isPaid) {
       bgColor = Colors.red.shade50;
       textColor = Colors.red.shade800;
       title = "Ödeme Yapılmadı";
@@ -455,7 +461,7 @@ class _UserDashboardTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: textColor.withOpacity(0.3)),
+        border: Border.all(color: textColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -473,7 +479,7 @@ class _UserDashboardTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(desc,
                     style: TextStyle(
-                        color: textColor.withOpacity(0.8), fontSize: 14)),
+                        color: textColor.withValues(alpha: 0.8), fontSize: 14)),
               ],
             ),
           )
@@ -517,7 +523,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                color: color.withOpacity(0.1), shape: BoxShape.circle),
+                color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 15),
