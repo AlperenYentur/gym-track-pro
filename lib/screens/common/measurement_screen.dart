@@ -243,8 +243,9 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
     // 1. Standartlar için zorunlu birim (Grafik hatasını önler)
     if (metric == "Kilo") return "kg";
     if (metric == "Yağ" || metric == "Yağ Oranı") return "%";
-    if (["Bel", "Göğüs", "Kol", "Bacak", "Üst Bacak"].contains(metric))
+    if (["Bel", "Göğüs", "Kol", "Bacak", "Üst Bacak"].contains(metric)) {
       return "cm";
+    }
 
     // 2. Özel ise veritabanından bul
     for (var m in allData.reversed) {
@@ -307,8 +308,9 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
                       fontWeight: FontWeight.bold,
                       fontSize: 18),
                   onChanged: (String? newValue) {
-                    if (newValue != null)
+                    if (newValue != null) {
                       setState(() => _selectedMetric = newValue);
+                    }
                   },
                   items: availableMetrics
                       .map<DropdownMenuItem<String>>((String value) {
@@ -456,11 +458,12 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
   }
 
   Widget _buildChart(List<MapEntry<DateTime, double>> data) {
-    if (data.length < 2)
+    if (data.length < 2) {
       return const Center(
           child: Text("Grafik için bu türde en az 2 veri gerekli.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey)));
+    }
 
     List<FlSpot> spots = [];
     for (int i = 0; i < data.length; i++) {
@@ -508,8 +511,9 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
               getTitlesWidget: (val, meta) {
                 int index = val.toInt();
                 if (index >= 0 && index < data.length) {
-                  if (data.length > 6 && index % 2 != 0)
+                  if (data.length > 6 && index % 2 != 0) {
                     return const SizedBox();
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(

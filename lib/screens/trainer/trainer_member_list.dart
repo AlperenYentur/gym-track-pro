@@ -594,7 +594,7 @@ class _TrainerMemberListScreenState extends State<TrainerMemberListScreen> {
                   title: const Text("Ödeme Alındı",
                       style: TextStyle(fontSize: 14)),
                   value: isPaid,
-                  activeColor: Colors.green,
+                  activeTrackColor: Colors.green,
                   onChanged: (val) => setModalState(() => isPaid = val),
                 ),
                 Opacity(

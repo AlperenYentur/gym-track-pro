@@ -235,7 +235,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
+                            color: Colors.green.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 5))
                       ],
@@ -247,7 +247,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle),
                               child: const Icon(LineIcons.wallet,
                                   color: Colors.white, size: 30),
@@ -298,7 +298,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                                 Text(
                                   "Son Sıfırlama: ${DateFormat('dd MMM HH:mm').format(_lastResetDate!)}",
                                   style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.7),
                                       fontSize: 11),
                                 )
                               ],

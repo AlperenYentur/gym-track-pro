@@ -465,7 +465,12 @@ class _TrainerScheduleScreenState extends State<TrainerScheduleScreen> {
                                 style: const TextStyle(
                                     color: Colors.green, fontSize: 12)),
                         value: selectedMemberIds.contains(member.id),
-                        activeColor: Colors.black,
+                        fillColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.black;
+                          }
+                          return null;
+                        }),
                         onChanged: (val) {
                           setModalState(() {
                             if (val == true) {
@@ -627,15 +632,21 @@ class _TrainerScheduleScreenState extends State<TrainerScheduleScreen> {
 
   Widget _typeRadio(String label, String val, String currentVal,
       Function(String?) onChanged) {
-    return Row(
-      children: [
-        Radio<String>(
-            value: val,
-            groupValue: currentVal,
-            activeColor: Colors.black,
-            onChanged: onChanged),
-        Text(label),
-      ],
+    return InkWell(
+      onTap: () => onChanged(val),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            val == currentVal
+                ? Icons.radio_button_checked
+                : Icons.radio_button_off,
+            color: val == currentVal ? Colors.black : Colors.grey,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 }

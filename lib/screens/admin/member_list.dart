@@ -545,7 +545,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   title: const Text("Ödeme Alındı",
                       style: TextStyle(fontSize: 14)),
                   value: isPaid,
-                  activeColor: Colors.green,
+                  activeTrackColor: Colors.green,
                   onChanged: (val) => setModalState(() => isPaid = val),
                 ),
                 Opacity(
@@ -605,10 +605,11 @@ class _MemberListScreenState extends State<MemberListScreen> {
                           if (context.mounted) Navigator.pop(ctx);
                         } catch (e) {
                           setModalState(() => isLoading = false);
-                          if (context.mounted)
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text("Hata: $e"),
                                 backgroundColor: Colors.red));
+                          }
                         }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(

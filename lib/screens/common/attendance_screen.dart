@@ -92,9 +92,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         _checkExistingAttendance(_selectedGroupId!);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red));
+      }
     }
   }
 
@@ -134,8 +135,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       .where('gymId', isEqualTo: auth.gymId)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (!snapshot.hasData) {
                       return const LinearProgressIndicator();
+                    }
                     var items = snapshot.data!.docs
                         .map((doc) => DropdownMenuItem(
                             value: doc['name'] as String,
@@ -148,7 +150,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               borderRadius: BorderRadius.circular(10)),
                           filled: true,
                           fillColor: Colors.white),
-                      value: _selectedCategory,
+                      key: ValueKey(_selectedCategory),
+                      initialValue: _selectedCategory,
                       items: items,
                       onChanged: (val) => setState(() {
                         _selectedCategory = val;
@@ -180,7 +183,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 borderRadius: BorderRadius.circular(10)),
                             filled: true,
                             fillColor: Colors.white),
-                        value: _selectedGroupId,
+                        key: ValueKey(_selectedGroupId),
+                        initialValue: _selectedGroupId,
                         items: items,
                         onChanged: (val) {
                           var doc = snapshot.data!.docs
@@ -207,9 +211,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     : StreamBuilder<List<MemberModel>>(
                         stream: db.getMembers(),
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData)
+                          if (!snapshot.hasData) {
                             return const Center(
                                 child: CircularProgressIndicator());
+                          }
                           var groupMembers = snapshot.data!
                               .where(
                                   (m) => _currentGroupMemberIds.contains(m.id))

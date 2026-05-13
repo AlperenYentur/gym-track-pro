@@ -47,30 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBwwoG8pXnDkAATgRten1Ptbjf0aylj38Q',
-    appId: '1:110652860402:android:aa01371be074e3f59fed6b',
-    messagingSenderId: '110652860402',
-    projectId: 'gym-track-pro-a0bb0',
-    storageBucket: 'gym-track-pro-a0bb0.firebasestorage.app',
+    apiKey: 'YOUR-API-KEY',
+    appId: 'YOUR-APP-ID',
+    messagingSenderId: 'YOUR-SENDER-ID',
+    projectId: 'YOUR-PROJECT-ID',
+    storageBucket: 'YOUR-STORAGE-BUCKET',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAREfYpI5LYyrmZiNqljW-QWY7Xr5bccJU',
-    appId: '1:110652860402:ios:2ed3133c25f71ef99fed6b',
-    messagingSenderId: '110652860402',
-    projectId: 'gym-track-pro-a0bb0',
-    storageBucket: 'gym-track-pro-a0bb0.firebasestorage.app',
-    iosBundleId: 'com.example.gymTrackPro',
+    apiKey: 'YOUR-API-KEY',
+    appId: 'YOUR-APP-ID',
+    messagingSenderId: 'YOUR-SENDER-ID',
+    projectId: 'YOUR-PROJECT-ID',
+    storageBucket: 'YOUR-STORAGE-BUCKET',
+    iosBundleId: 'com.example.yourApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAXBNm06LHa18SbPBlyqVT4xqOEw1dHDXg',
-    appId: '1:110652860402:web:1f3e72a56d3d57ea9fed6b',
-    messagingSenderId: '110652860402',
-    projectId: 'gym-track-pro-a0bb0',
-    authDomain: 'gym-track-pro-a0bb0.firebaseapp.com',
-    storageBucket: 'gym-track-pro-a0bb0.firebasestorage.app',
-    measurementId: 'G-XXS3LEW4RQ',
+    apiKey: 'YOUR-API-KEY',
+    appId: 'YOUR-APP-ID',
+    messagingSenderId: 'YOUR-SENDER-ID',
+    projectId: 'YOUR-PROJECT-ID',
+    authDomain: 'YOUR-AUTH-DOMAIN',
+    storageBucket: 'YOUR-STORAGE-BUCKET',
+    measurementId: 'YOUR-MEASUREMENT-ID',
   );
-
 }

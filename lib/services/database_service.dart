@@ -102,7 +102,7 @@ class DatabaseService {
         .map((s) {
       double total = 0;
       for (var doc in s.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         // Tarih filtresi (Client-side to avoid index issues)
         if (fromDate != null && data['date'] != null) {
           final date = (data['date'] as Timestamp).toDate();
