@@ -50,7 +50,8 @@ class AuthProvider with ChangeNotifier {
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         _role = UserRole.fromString(data['role']);
-        _gymId = data['gymId'];
+        final fetchedGymId = data['gymId'] as String?;
+        _gymId = (fetchedGymId != null && fetchedGymId.isNotEmpty) ? fetchedGymId : 'salon1';
       }
     } catch (e) {
       debugPrint("Kullanıcı detayları çekilemedi: $e");

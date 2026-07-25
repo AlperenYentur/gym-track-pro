@@ -9,13 +9,13 @@ import '../models/measurement_model.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final String? gymId;
+  final String gymId;
 
-  DatabaseService({this.gymId});
+  DatabaseService({String? gymId})
+      : gymId = (gymId != null && gymId.isNotEmpty) ? gymId : 'salon1';
 
   // --- HATIRLATMA KAYDI (YENİ EKLENDİ) ---
   Future<void> logReminder(String memberId, String type) async {
-    if (gymId == null) return;
     await _db.collection('members').doc(memberId).collection('reminders').add({
       'type': type,
       'sentAt': FieldValue.serverTimestamp(),
@@ -27,7 +27,6 @@ class DatabaseService {
 
   // --- TRAINER İŞLEMLERİ ---
   Stream<List<TrainerModel>> getTrainers() {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('trainers')
         .where('gymId', isEqualTo: gymId)
@@ -44,7 +43,6 @@ class DatabaseService {
   }
 
   Future<void> addTrainer(String name, String phone, String specialty) async {
-    if (gymId == null) return;
     await _db.collection('trainers').add({
       'gymId': gymId,
       'name': name,
@@ -68,7 +66,6 @@ class DatabaseService {
 
   // --- MEMBER İŞLEMLERİ ---
   Stream<List<MemberModel>> getMembers() {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('members')
         .where('gymId', isEqualTo: gymId)
@@ -88,12 +85,10 @@ class DatabaseService {
 
   // --- KASA & FİNANS ---
   Future<void> addTransaction(TransactionModel transaction) async {
-    if (gymId == null) return;
     await _db.collection('transactions').add(transaction.toMap());
   }
 
   Stream<double> getTotalIncome({DateTime? fromDate}) {
-    if (gymId == null) return Stream.value(0.0);
     return _db
         .collection('transactions')
         .where('gymId', isEqualTo: gymId)
@@ -108,15 +103,14 @@ class DatabaseService {
           final date = (data['date'] as Timestamp).toDate();
           if (date.isBefore(fromDate)) continue;
         }
-        total += (doc['amount'] ?? 0);
+        total += ((data['amount'] as num?)?.toDouble() ?? 0.0);
       }
-      return total.toDouble();
+      return total;
     });
   }
 
   // --- KASA SIFIRLAMA İŞLEMLERİ ---
   Future<DateTime?> getLastResetDate() async {
-    if (gymId == null) return null;
     final doc = await _db.collection('gym_settings').doc(gymId).get();
     if (doc.exists && doc.data()!.containsKey('lastKasaResetDate')) {
       return (doc['lastKasaResetDate'] as Timestamp).toDate();
@@ -125,7 +119,6 @@ class DatabaseService {
   }
 
   Future<void> resetCashRegister() async {
-    if (gymId == null) return;
     await _db.collection('gym_settings').doc(gymId).set({
       'lastKasaResetDate': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -169,7 +162,7 @@ class DatabaseService {
     if (paidAmount > 0) {
       await addTransaction(TransactionModel(
         id: '', // Firestore oluşturacak
-        gymId: gymId!,
+        gymId: gymId,
         type: 'income',
         amount: paidAmount,
         description: 'Üyelik Yenileme',
@@ -193,7 +186,6 @@ class DatabaseService {
 
   // --- SESSION İŞLEMLERİ ---
   Stream<List<SessionModel>> getTrainerSessions(String trainerId) {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('sessions')
         .where('gymId', isEqualTo: gymId)
@@ -210,7 +202,6 @@ class DatabaseService {
       List<String> participants,
       String notes,
       String trainerId) async {
-    if (gymId == null) return;
     await _db.collection('sessions').add({
       'gymId': gymId,
       'trainerId': trainerId,
@@ -257,14 +248,17 @@ class DatabaseService {
     return _db
         .collection('sessions')
         .where('participantIds', arrayContains: myId)
-        .orderBy('startTime')
         .snapshots()
-        .map((s) => s.docs.map((d) => SessionModel.fromFirestore(d)).toList());
+        .map((s) {
+      final list =
+          s.docs.map((d) => SessionModel.fromFirestore(d)).toList();
+      list.sort((a, b) => a.startTime.compareTo(b.startTime));
+      return list;
+    });
   }
 
   // --- SINIF & YOKLAMA ---
   Stream<List<ClassCategory>> getCategories() {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('class_categories')
         .where('gymId', isEqualTo: gymId)
@@ -284,7 +278,6 @@ class DatabaseService {
   }
 
   Stream<List<ClassGroup>> getGroups(String categoryId) {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('class_groups')
         .where('gymId', isEqualTo: gymId)
@@ -337,7 +330,6 @@ class DatabaseService {
 
   // --- DUYURU SİSTEMİ ---
   Future<void> addAnnouncement(String text, {String title = "Duyuru"}) async {
-    if (gymId == null) return;
     await _db.collection('announcements').add({
       'gymId': gymId,
       'title': title,
@@ -347,7 +339,6 @@ class DatabaseService {
   }
 
   Stream<QuerySnapshot> getAnnouncements() {
-    if (gymId == null) return const Stream.empty();
     return _db
         .collection('announcements')
         .where('gymId', isEqualTo: gymId)
@@ -361,8 +352,6 @@ class DatabaseService {
 
   // --- DUYURU OTOMATİK TEMİZLEME (24 SAAT) ---
   Future<void> cleanupExpiredAnnouncements() async {
-    if (gymId == null) return;
-
     // 24 saat öncesini hesapla
     final threshold = DateTime.now().subtract(const Duration(hours: 24));
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options_salona.dart';
+import 'firebase_options.dart';
 // BU IMPORT ZATEN VARDI, KULLANIYORUZ:
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -17,16 +17,31 @@ import 'screens/user/user_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
 
   // 1. Firebase Başlatılıyor
-  await Firebase.initializeApp(
-    options: SalonAFirebaseOptions.currentPlatform
-  );
+  debugPrint("DEBUG: Initializing Firebase...");
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform
+    );
+    debugPrint("DEBUG: Firebase initialization completed successfully");
+  } catch (e) {
+    debugPrint("DEBUG: Firebase initialization failed with error: $e");
+  }
 
-// 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
-  await initializeDateFormatting('tr_TR', null);
+  // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
+  debugPrint("DEBUG: Initializing date formatting...");
+  try {
+    await initializeDateFormatting('tr_TR', null);
+    debugPrint("DEBUG: Date formatting initialization completed successfully");
+  } catch (e) {
+    debugPrint("DEBUG: Date formatting initialization failed with error: $e");
+  }
 
+  debugPrint("DEBUG: Running MyApp...");
   runApp(const MyApp());
+  debugPrint("DEBUG: runApp() finished");
 }
 
 class MyApp extends StatelessWidget {

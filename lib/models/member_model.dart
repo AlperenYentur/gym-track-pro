@@ -36,7 +36,7 @@ class MemberModel {
       nextPaymentDate:
           (data['nextPaymentDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isPaid: data['isPaid'] ?? false,
-      debt: (data['debt'] ?? 0).toDouble(),
+      debt: (data['debt'] as num?)?.toDouble() ?? 0.0,
       workoutProgram: data['workoutProgram'],
     );
   }

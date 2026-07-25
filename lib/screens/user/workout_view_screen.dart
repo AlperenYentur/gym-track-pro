@@ -36,9 +36,12 @@ class _WorkoutViewScreenState extends State<WorkoutViewScreen> {
   void _parseProgram() {
     if (widget.workoutProgramJson.isNotEmpty) {
       try {
-        setState(() {
-          _program = jsonDecode(widget.workoutProgramJson);
-        });
+        final decoded = jsonDecode(widget.workoutProgramJson);
+        if (decoded is List) {
+          setState(() {
+            _program = decoded;
+          });
+        }
       } catch (e) {
         debugPrint("JSON Hatası: $e");
       }
