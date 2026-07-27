@@ -17,22 +17,26 @@ import 'screens/user/user_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint("FlutterError: ${details.exception}");
+  };
+
   debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
 
   // 1. Firebase Başlatılıyor
   debugPrint("DEBUG: Initializing Firebase...");
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     debugPrint("DEBUG: Firebase initialization completed successfully");
-  } catch (e) {
-    debugPrint("DEBUG: Firebase initialization failed with error: $e");
+  } catch (e, stack) {
+    debugPrint("DEBUG: Firebase initialization failed: $e\n$stack");
   }
 
-  // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR (HATAYI ÇÖZEN SATIR BU)
+  // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR
   debugPrint("DEBUG: Initializing date formatting...");
   try {
     await initializeDateFormatting('tr_TR', null);
