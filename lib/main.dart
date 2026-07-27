@@ -22,9 +22,11 @@ void main() async {
   // 1. Firebase Başlatılıyor
   debugPrint("DEBUG: Initializing Firebase...");
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform
-    );
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
     debugPrint("DEBUG: Firebase initialization completed successfully");
   } catch (e) {
     debugPrint("DEBUG: Firebase initialization failed with error: $e");
@@ -85,11 +87,6 @@ class AuthWrapper extends StatelessWidget {
     if (!auth.isAuth) {
       return const LoginScreen();
     }
-
-
-
-// ... (existing imports)
-
     // 3. Durum: Rolüne göre yönlendir
     if (auth.role == UserRole.admin) {
       return const AdminHomeScreen();
