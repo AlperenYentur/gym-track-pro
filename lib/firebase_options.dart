@@ -56,6 +56,7 @@ class DefaultFirebaseOptions {
     projectId: 'gym-track-pro-a0bb0',
     storageBucket: 'gym-track-pro-a0bb0.firebasestorage.app',
     iosBundleId: 'com.alperenyentur.gymtrackpro',
+    iosClientId: '110652860402-2ed3133c25f71ef99fed6b.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -65,6 +66,7 @@ class DefaultFirebaseOptions {
     projectId: 'gym-track-pro-a0bb0',
     storageBucket: 'gym-track-pro-a0bb0.firebasestorage.app',
     iosBundleId: 'com.alperenyentur.gymtrackpro',
+    iosClientId: '110652860402-2ed3133c25f71ef99fed6b.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
