@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 // BU IMPORT ZATEN VARDI, KULLANIYORUZ:
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,13 +22,6 @@ void main() {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     
-    FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details);
-      debugPrint("FlutterError: ${details.exception}");
-    };
-
-    debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
-
     // 1. Firebase Başlatılıyor
     debugPrint("DEBUG: Initializing Firebase...");
     try {
@@ -34,9 +29,20 @@ void main() {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       debugPrint("DEBUG: Firebase initialization completed successfully");
+      
+      // Pass all uncaught "fatal" errors from the framework to Crashlytics
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      
+      // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
     } catch (e, stack) {
       debugPrint("DEBUG: Firebase initialization failed: $e\n$stack");
     }
+
+    debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
 
     // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR
     debugPrint("DEBUG: Initializing date formatting...");
@@ -52,6 +58,7 @@ void main() {
     debugPrint("DEBUG: runApp() finished");
   }, (error, stack) {
     debugPrint("Uncaught async error: $error\n$stack");
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
   });
 }
 
