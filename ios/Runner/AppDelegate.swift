@@ -15,13 +15,18 @@ import UIKit
     // createTouchRateCorrectionVSyncClientIfNeeded runs) is a known Flutter engine
     // bug on ProMotion (>60Hz) displays: https://github.com/flutter/flutter/issues/183900
     flutterEngine.run()
-    GeneratedPluginRegistrant.register(with: flutterEngine)
 
     let flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
     let appWindow = UIWindow(frame: UIScreen.main.bounds)
     appWindow.rootViewController = flutterViewController
     appWindow.makeKeyAndVisible()
     window = appWindow
+
+    // Registered after the view controller attaches to the engine (triggered by
+    // makeKeyAndVisible loading its view) -- registering immediately after run()
+    // raced the engine's binary messenger setup and null-crashed inside
+    // URLLauncherPlugin.register(with:) on cold TestFlight launches.
+    GeneratedPluginRegistrant.register(with: flutterEngine)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
