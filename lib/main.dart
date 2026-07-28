@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,39 +16,43 @@ import 'screens/admin/admin_home.dart';
 import 'screens/trainer/trainer_home.dart';
 import 'screens/user/user_home_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint("FlutterError: ${details.exception}");
-  };
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      debugPrint("FlutterError: ${details.exception}");
+    };
 
-  debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
+    debugPrint("DEBUG: WidgetsFlutterBinding.ensureInitialized() completed");
 
-  // 1. Firebase Başlatılıyor
-  debugPrint("DEBUG: Initializing Firebase...");
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint("DEBUG: Firebase initialization completed successfully");
-  } catch (e, stack) {
-    debugPrint("DEBUG: Firebase initialization failed: $e\n$stack");
-  }
+    // 1. Firebase Başlatılıyor
+    debugPrint("DEBUG: Initializing Firebase...");
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint("DEBUG: Firebase initialization completed successfully");
+    } catch (e, stack) {
+      debugPrint("DEBUG: Firebase initialization failed: $e\n$stack");
+    }
 
-  // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR
-  debugPrint("DEBUG: Initializing date formatting...");
-  try {
-    await initializeDateFormatting('tr_TR', null);
-    debugPrint("DEBUG: Date formatting initialization completed successfully");
-  } catch (e) {
-    debugPrint("DEBUG: Date formatting initialization failed with error: $e");
-  }
+    // 2. TÜRKÇE TARİH FORMATI BAŞLATILIYOR
+    debugPrint("DEBUG: Initializing date formatting...");
+    try {
+      await initializeDateFormatting('tr_TR', null);
+      debugPrint("DEBUG: Date formatting initialization completed successfully");
+    } catch (e) {
+      debugPrint("DEBUG: Date formatting initialization failed with error: $e");
+    }
 
-  debugPrint("DEBUG: Running MyApp...");
-  runApp(const MyApp());
-  debugPrint("DEBUG: runApp() finished");
+    debugPrint("DEBUG: Running MyApp...");
+    runApp(const MyApp());
+    debugPrint("DEBUG: runApp() finished");
+  }, (error, stack) {
+    debugPrint("Uncaught async error: $error\n$stack");
+  });
 }
 
 class MyApp extends StatelessWidget {

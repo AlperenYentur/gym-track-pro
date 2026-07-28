@@ -26,21 +26,35 @@ class AuthProvider with ChangeNotifier {
 
   // Dinleyiciyi Başlat
   void _init() {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      _user = user;
+    try {
+      FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+        try {
+          _user = user;
 
-      if (user != null) {
-        // Kullanıcı giriş yaptıysa Rolünü ve GymId'sini çek
-        await _fetchUserDetails(user.uid);
-      } else {
-        // Çıkış yaptıysa bilgileri sıfırla
-        _role = null;
-        _gymId = null;
-      }
-
+          if (user != null) {
+            // Kullanıcı giriş yaptıysa Rolünü ve GymId'sini çek
+            await _fetchUserDetails(user.uid);
+          } else {
+            // Çıkış yaptıysa bilgileri sıfırla
+            _role = null;
+            _gymId = null;
+          }
+        } catch (e) {
+          debugPrint("AuthProvider user details processing error: $e");
+        } finally {
+          _isLoading = false;
+          notifyListeners();
+        }
+      }, onError: (error, stackTrace) {
+        debugPrint("AuthProvider authStateChanges stream error: $error\n$stackTrace");
+        _isLoading = false;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint("AuthProvider init error: $e");
       _isLoading = false;
       notifyListeners();
-    });
+    }
   }
 
   // Veritabanından Rol ve Gym ID çekme
